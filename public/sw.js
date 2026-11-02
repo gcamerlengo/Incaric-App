@@ -1,5 +1,5 @@
 // IncaricApp service worker: offline app shell + push notifications.
-const CACHE = "incaricapp-v2";
+const CACHE = "incaricapp-v3";
 
 self.addEventListener("install", (event) => {
   event.waitUntil(caches.open(CACHE).then((c) => c.addAll(["./", "./index.html", "./manifest.webmanifest", "./icons/icon-192.png"])));
