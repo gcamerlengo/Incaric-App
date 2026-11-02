@@ -1,0 +1,40 @@
+rules_version = '2';
+
+// Only the three plant accounts can use the app.
+// Director: reads and writes every task. Collaborators: read only their own tasks
+// and may change only whether a task is done.
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function email() { return request.auth.token.email.lower(); }
+    function signedIn() { return request.auth != null && request.auth.token.email != null; }
+    function isDirector() { return signedIn() && email() == 'antonio.pancione@oliodante.it'; }
+    function isMember() {
+      return signedIn() && email() in ['antonio.delgiacco@oliodante.it', 'raffaele.gentile@oliodante.it'];
+    }
+    function validTask(t) {
+      return t.title is string && t.title.size() > 0 && t.title.size() <= 300
+        && t.note is string && t.note.size() <= 2000
+        && t.priority in ['alta', 'media', 'bassa']
+        && t.day is string && t.day.matches('^[0-9]{4}-[0-9]{2}-[0-9]{2}$')
+        && t.assigneeEmail in ['antonio.delgiacco@oliodante.it', 'raffaele.gentile@oliodante.it']
+        && t.done is bool;
+    }
+
+    match /tasks/{taskId} {
+      allow read: if isDirector()
+        || (isMember() && resource.data.assigneeEmail == email());
+      allow create: if isDirector() && validTask(request.resource.data);
+      allow update: if (isDirector() && validTask(request.resource.data))
+        || (isMember()
+            && resource.data.assigneeEmail == email()
+            && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['done', 'doneAt'])
+            && request.resource.data.done is bool);
+      allow delete: if isDirector();
+    }
+
+    // One document per person with the push tokens of their devices. Only the Cloud Function reads them all.
+    match /pushTokens/{userEmail} {
+      allow read, write: if signedIn() && email() == userEmail.lower();
+    }
+  }
+}
