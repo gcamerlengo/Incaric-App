@@ -27,7 +27,7 @@ Tutti i servizi sono sui piani gratuiti.
 Serve un **progetto nuovo**, separato da Agenda Autista: il controllo delle email autorizzate di Agenda rifiuterebbe Del Giacco e Gentile. Il piano gratuito consente due progetti attivi.
 
 1. Crea un progetto su [supabase.com](https://supabase.com) (regione Europa), per esempio `incaricapp`.
-2. In **SQL Editor** incolla ed esegui `supabase/migrations/0001_schema.sql`. L'ultima riga mostra il `WEBHOOK_SECRET` da copiare su Vercel.
+2. In **SQL Editor** incolla ed esegui `supabase/migrations/0001_schema.sql` (l'ultima riga mostra il `WEBHOOK_SECRET` da copiare su Vercel), poi `0002_revoca_funzioni.sql`.
 3. In **Authentication › Emails › Templates** metti il codice nei modelli **Magic Link** e **Confirm signup**, ad esempio:
    `Il tuo codice per IncaricApp è: {{ .Token }}`
 4. In **Authentication › SMTP Settings** abilita l'SMTP personalizzato con la casella Aruba già usata per Agenda (es. `agenda@oliodante.it`): host `smtps.aruba.it`, porta `465`, utente e password della casella. Senza questo passaggio Supabase invia pochissime email all'ora.
