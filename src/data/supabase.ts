@@ -90,7 +90,7 @@ export function createSupabaseBackend(): Backend {
       if (!("serviceWorker" in navigator) || !("PushManager" in window) || !("Notification" in window)) return "Questo browser non supporta le notifiche push.";
       const perm = await Notification.requestPermission();
       if (perm !== "granted") return "Notifiche non consentite. Puoi attivarle dalle impostazioni del telefono.";
-      const { vapidPublicKey } = (await fetch("/api/notifica").then((r) => r.json()).catch(() => ({}))) as { vapidPublicKey?: string | null };
+      const vapidPublicKey = import.meta.env.VITE_VAPID_PUBLIC_KEY as string | undefined;
       if (!vapidPublicKey) return "Le notifiche non sono ancora configurate sul server.";
       const reg = await navigator.serviceWorker.ready;
       let sub = await reg.pushManager.getSubscription();

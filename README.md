@@ -4,7 +4,8 @@ Web app installabile (PWA) con cui il Direttore dello stabilimento Olio Dante as
 
 - **Frontend:** React + Vite, installabile su Android e iPhone ("Aggiungi a schermata Home").
 - **Database e accesso:** Supabase (Postgres). Si entra con un codice a 6 cifre ricevuto via email.
-- **Pubblicazione e notifiche:** Vercel (`api/notifica.ts`).
+- **Pubblicazione:** GitHub Pages, aggiornata da sola a ogni modifica su `main` (`.github/workflows/pubblica.yml`).
+- **Notifiche push:** Edge Function di Supabase `notifica` (`supabase/functions/notifica`), chiamata dal database.
 
 Tutti i servizi sono sui piani gratuiti.
 
@@ -18,37 +19,26 @@ Tutti i servizi sono sui piani gratuiti.
 
 - Possono entrare solo le email in `utenti_autorizzati`; il ruolo viene da lì.
 - Priorità: **rossa** alta (entro oggi), **gialla** media (entro il giorno indicato), **verde** bassa (in settimana).
-- Notifiche: al collaboratore quando riceve un compito, al Direttore quando un compito viene completato. Se è configurato l'SMTP arriva anche una email.
+- Notifiche: al collaboratore quando riceve un compito, al Direttore quando un compito viene completato.
 
 ## Messa in funzione
 
-### 1. Supabase
+Indirizzo dell'app: **https://gcamerlengo.github.io/Incaric-App/**
 
-Serve un **progetto nuovo**, separato da Agenda Autista: il controllo delle email autorizzate di Agenda rifiuterebbe Del Giacco e Gentile. Il piano gratuito consente due progetti attivi.
+### 1. Supabase (progetto `IncaricApp`, già creato)
 
-1. Crea un progetto su [supabase.com](https://supabase.com) (regione Europa), per esempio `incaricapp`.
-2. In **SQL Editor** incolla ed esegui `supabase/migrations/0001_schema.sql` (l'ultima riga mostra il `WEBHOOK_SECRET` da copiare su Vercel), poi `0002_revoca_funzioni.sql`.
-3. In **Authentication › Emails › Templates** metti il codice nei modelli **Magic Link** e **Confirm signup**, ad esempio:
+Database, permessi, chiavi delle notifiche e funzione `notifica` sono già a posto (`supabase/migrations/0001`–`0003`). Restano da fare a mano, dal pannello di Supabase:
+
+1. **Authentication › Emails › Templates**: nei modelli **Magic Link** e **Confirm signup** metti il codice, ad esempio
    `Il tuo codice per IncaricApp è: {{ .Token }}`
-4. In **Authentication › SMTP Settings** abilita l'SMTP personalizzato con la casella Aruba già usata per Agenda (es. `agenda@oliodante.it`): host `smtps.aruba.it`, porta `465`, utente e password della casella. Senza questo passaggio Supabase invia pochissime email all'ora.
-5. In **Project Settings › API** copia `Project URL` e la chiave `anon public`.
+2. **Authentication › SMTP Settings** (consigliato): SMTP personalizzato con la casella Aruba di Agenda (`agenda@oliodante.it`), host `smtps.aruba.it`, porta `465`. Senza, Supabase invia pochissime email all'ora.
+3. **Authentication › URL Configuration**: Site URL `https://gcamerlengo.github.io/Incaric-App/`.
 
-### 2. Vercel
+### 2. GitHub Pages
 
-1. Su [vercel.com](https://vercel.com) importa il repository `Incaric-App` (le impostazioni di build vengono riconosciute da sole).
-2. Aggiungi le variabili d'ambiente:
+A ogni modifica su `main` il workflow `pubblica.yml` costruisce l'app e la copia sul ramo `gh-pages`. In **Settings › Pages** la sorgente deve essere *Deploy from a branch* › `gh-pages` / `(root)`.
 
-   | Variabile | Valore |
-   | --- | --- |
-   | `VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY` | dal punto 1.5 |
-   | `WEBHOOK_SECRET` | il valore mostrato al punto 1.2 |
-   | `VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY` | generate con `npx web-push generate-vapid-keys` |
-   | `SITO_URL` | l'indirizzo Vercel, es. `https://incaricapp.vercel.app` |
-   | `SMTP_HOST` / `SMTP_PORT` / `SMTP_USER` / `SMTP_PASS` / `SMTP_FROM` | facoltative: per ricevere anche le email |
-3. Pubblica. Poi, in Supabase:
-   - **Authentication › URL Configuration**: imposta come Site URL l'indirizzo Vercel.
-   - Se l'indirizzo non è `https://incaricapp.vercel.app`, nel **SQL Editor** esegui:
-     `update privato.configurazione set valore = 'https://<indirizzo>/api/notifica' where chiave = 'url_notifiche';`
+I valori in `.env.production` sono pubblici (finiscono comunque nell'app). La chiave VAPID privata e il segreto delle notifiche stanno solo nella tabella `privato.configurazione` di Supabase.
 
 ### 3. Sui telefoni
 
@@ -65,4 +55,4 @@ npm run dev
 
 Senza le variabili Supabase l'app parte in **versione di prova**: i dati restano sul dispositivo e al login si sceglie chi essere.
 
-Struttura: `src/` app React, `public/sw.js` service worker (offline e notifiche), `api/notifica.ts` invio notifiche, `supabase/migrations/` database e permessi. Per cambiare persone o mail: `src/config.ts` e la tabella `utenti_autorizzati`.
+Struttura: `src/` app React, `public/sw.js` service worker (offline e notifiche), `supabase/functions/notifica` invio notifiche, `supabase/migrations/` database e permessi. Per cambiare persone o mail: `src/config.ts` e la tabella `utenti_autorizzati`.
