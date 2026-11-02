@@ -59,8 +59,11 @@ export const demoBackend: Backend = {
     return () => taskSubs.delete(run);
   },
   async addTask(t: NewTask) {
-    memTasks = [...memTasks, { ...t, id: `demo-${Date.now()}`, done: false, doneAt: null, createdAt: Date.now() }]; save();
+    const id = `demo-${Date.now()}`;
+    memTasks = [...memTasks, { ...t, id, done: false, doneAt: null, createdAt: Date.now() }]; save();
+    return id;
   },
+  async notify() { /* no push in demo */ },
   async updateTask(id, patch) { memTasks = memTasks.map((t) => (t.id === id ? { ...t, ...patch } : t)); save(); },
   async deleteTask(id) { memTasks = memTasks.filter((t) => t.id !== id); save(); },
   async enablePush() { return "In modalità demo le notifiche push non sono attive. Lo saranno con il backend Firebase."; },

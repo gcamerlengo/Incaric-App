@@ -68,9 +68,18 @@ function Board({ me }: { me: Person }) {
     .sort((a, b) => Number(a.done) - Number(b.done) || PRIORITIES[a.priority].order - PRIORITIES[b.priority].order || a.createdAt - b.createdAt);
   const doneCount = ofDay.filter((t) => t.done).length;
 
-  const toggle = (t: Task) => { void backend.updateTask(t.id, { done: !t.done }); };
+  const toggle = async (t: Task) => {
+    await backend.updateTask(t.id, { done: !t.done });
+    if (!t.done) void backend.notify(t.id, "done");
+  };
   const save = async (t: NewTask, id?: string) => {
-    if (id) await backend.updateTask(id, t); else await backend.addTask(t);
+    if (id) {
+      const before = tasks.find((x) => x.id === id);
+      await backend.updateTask(id, t);
+      if (before && before.assigneeEmail !== t.assigneeEmail) void backend.notify(id, "assigned");
+    } else {
+      void backend.notify(await backend.addTask(t), "assigned");
+    }
     if (t.day !== day) setDay(t.day);
   };
 
@@ -117,7 +126,7 @@ function Board({ me }: { me: Person }) {
       <main className="list">
         {ofDay.length ? ofDay.map((t) => (
           <TaskCard key={t.id} t={t} showWho={isDirector} canCheck={!isDirector}
-            onToggle={() => toggle(t)} onOpen={() => setSheet({ open: true, task: t })} />
+            onToggle={() => void toggle(t)} onOpen={() => setSheet({ open: true, task: t })} />
         )) : (
           <div className="empty">
             <b>{isDirector ? "Nessun compito" : "Giornata libera"}</b>
@@ -132,7 +141,7 @@ function Board({ me }: { me: Person }) {
         open={sheet.open} me={me} task={sheet.task} defaultDay={day} days={days}
         defaultAssignee={filter !== "all" ? filter : undefined}
         onClose={() => setSheet((s) => ({ ...s, open: false }))}
-        onSave={save} onDelete={(id) => backend.deleteTask(id)} onToggle={toggle}
+        onSave={save} onDelete={(id) => backend.deleteTask(id)} onToggle={(t) => void toggle(t)}
       />
     </div>
   );

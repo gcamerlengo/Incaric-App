@@ -61,7 +61,20 @@ export function createFirebaseBackend(): Backend {
       return onSnapshot(q, (snap) => cb(snap.docs.map((d) => toTask(d.id, d.data()))), (err) => console.error("tasks", err));
     },
     async addTask(t) {
-      await addDoc(tasksCol, { ...t, note: t.note || "", done: false, doneAt: null, createdAt: serverTimestamp(), createdBy: auth.currentUser?.email ?? "" });
+      const ref = await addDoc(tasksCol, { ...t, note: t.note || "", done: false, doneAt: null, createdAt: serverTimestamp(), createdBy: auth.currentUser?.email ?? "" });
+      return ref.id;
+    },
+    async notify(taskId, event) {
+      // Free notification sender: Cloudflare Pages Function in functions/api/notify.ts.
+      try {
+        const idToken = await auth.currentUser?.getIdToken();
+        if (!idToken) return;
+        await fetch(`${import.meta.env.VITE_NOTIFY_URL || "/api/notify"}`, {
+          method: "POST",
+          headers: { "content-type": "application/json", authorization: `Bearer ${idToken}` },
+          body: JSON.stringify({ taskId, event }),
+        });
+      } catch (err) { console.warn("notify", err); }
     },
     async updateTask(id, patch) {
       const p: Record<string, unknown> = { ...patch };

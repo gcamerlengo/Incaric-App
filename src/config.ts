@@ -13,7 +13,7 @@ export interface Person {
 }
 
 // The three people who use the app. Emails must match the Firebase Auth accounts
-// and firestore.rules / functions/src/index.ts.
+// and firestore.rules / functions/api/notify.ts.
 export const PEOPLE: Person[] = [
   { id: "ap", email: "antonio.pancione@oliodante.it", name: "Antonio Pancione", first: "Antonio", short: "Pancione", area: "Direzione stabilimento", role: "director", initials: "AP", color: "#C8231B" },
   { id: "dg", email: "antonio.delgiacco@oliodante.it", name: "Antonio Del Giacco", first: "Antonio", short: "Del Giacco", area: "Programmazione Produzione", role: "member", initials: "AD", color: "#5E6B2A" },
