@@ -1,9 +1,9 @@
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
 
-// base "./" lets the same build run on Firebase Hosting (root) and GitHub Pages (/incaric-app/).
+// base "./" lets the same build run on Vercel (root) and any sub-path preview.
 export default defineConfig({
   base: "./",
   plugins: [react()],
-  build: { chunkSizeWarningLimit: 700, rollupOptions: { output: { manualChunks: { firebase: ["firebase/app", "firebase/auth", "firebase/firestore", "firebase/messaging"] } } } },
+
 });

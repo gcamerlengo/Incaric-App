@@ -1,54 +1,68 @@
 # IncaricApp
 
-Web app installabile (iPhone e Android) con cui il Direttore dello stabilimento Olio Dante assegna i compiti del giorno a Programmazione Produzione e Acquisti, con bandierine di priorità e notifiche push.
+Web app installabile (PWA) con cui il Direttore dello stabilimento Olio Dante assegna i compiti del giorno a Programmazione Produzione e Acquisti, con bandierine di priorità e notifiche push. Stessa struttura di Agenda Autista.
 
-| Persona | Ruolo nell'app |
-|---|---|
-| Antonio Pancione | Direttore: crea, modifica ed elimina i compiti, vede quelli di tutti |
-| Antonio Del Giacco | Programmazione Produzione: vede i suoi compiti e li segna come fatti |
-| Raffaele Gentile | Acquisti: vede i suoi compiti e li segna come fatti |
+- **Frontend:** React + Vite, installabile su Android e iPhone ("Aggiungi a schermata Home").
+- **Database e accesso:** Supabase (Postgres). Si entra con un codice a 6 cifre ricevuto via email.
+- **Pubblicazione e notifiche:** Vercel (`api/notifica.ts`).
 
-Priorità: **rossa** alta (entro oggi), **gialla** media (entro il giorno indicato), **verde** bassa (in settimana).
+Tutti i servizi sono sui piani gratuiti.
 
-## Due modalità
+## Regole, garantite dal database
 
-- **Demo**: se le variabili Firebase non sono impostate, l'app salva i dati solo sul dispositivo e al login si sceglie chi essere. È la versione pubblicata su GitHub Pages a ogni modifica di `main`.
-- **Reale**: con Firebase configurato, i tre utenti entrano con mail aziendale e password, i dati sono condivisi in tempo reale e arrivano le notifiche.
+| | Antonio Pancione (Direttore) | Antonio Del Giacco, Raffaele Gentile |
+|---|---|---|
+| Vedere i compiti | tutti | solo i propri |
+| Creare, modificare, eliminare | sì | no |
+| Segnare come fatto | sì | sì, solo i propri |
 
-## Configurare Firebase (una volta sola)
+- Possono entrare solo le email in `utenti_autorizzati`; il ruolo viene da lì.
+- Priorità: **rossa** alta (entro oggi), **gialla** media (entro il giorno indicato), **verde** bassa (in settimana).
+- Notifiche: al collaboratore quando riceve un compito, al Direttore quando un compito viene completato. Se è configurato l'SMTP arriva anche una email.
 
-1. Su <https://console.firebase.google.com> crea un progetto, per esempio `incaricapp-oliodante`.
-2. **Authentication** › Metodo di accesso › abilita *Email/password*. In *Utenti* aggiungi i tre account con le mail aziendali e una password provvisoria (ognuno potrà cambiarla con "Password dimenticata").
-3. **Firestore Database** › Crea database in modalità produzione, posizione `eur3 (Europe)`.
-4. **Impostazioni progetto** › Le tue app › aggiungi un'app *Web*: copia i valori in un file `.env.local` partendo da `.env.example`.
-5. **Impostazioni progetto** › Cloud Messaging › Certificati push web › *Genera coppia di chiavi*: copia la chiave in `VITE_FIREBASE_VAPID_KEY`.
-6. Le notifiche usano Cloud Functions, che richiedono il piano **Blaze** (a consumo). Con tre utenti si resta nella quota gratuita, ma serve una carta associata.
+## Messa in funzione
 
-Poi, dal computer:
+### 1. Supabase
 
-```bash
-npm install -g firebase-tools
-firebase login
-cp .firebaserc.example .firebaserc   # inserisci l'ID del progetto
-npm install && npm run build
-firebase deploy                     # regole, indici, funzioni e sito
-```
+Serve un **progetto nuovo**, separato da Agenda Autista: il controllo delle email autorizzate di Agenda rifiuterebbe Del Giacco e Gentile. Il piano gratuito consente due progetti attivi.
 
-L'indirizzo finale sarà `https://<id-progetto>.web.app`.
+1. Crea un progetto su [supabase.com](https://supabase.com) (regione Europa), per esempio `incaricapp`.
+2. In **SQL Editor** incolla ed esegui `supabase/migrations/0001_schema.sql`. L'ultima riga mostra il `WEBHOOK_SECRET` da copiare su Vercel.
+3. In **Authentication › Emails › Templates** metti il codice nei modelli **Magic Link** e **Confirm signup**, ad esempio:
+   `Il tuo codice per IncaricApp è: {{ .Token }}`
+4. In **Authentication › SMTP Settings** abilita l'SMTP personalizzato con la casella Aruba già usata per Agenda (es. `agenda@oliodante.it`): host `smtps.aruba.it`, porta `465`, utente e password della casella. Senza questo passaggio Supabase invia pochissime email all'ora.
+5. In **Project Settings › API** copia `Project URL` e la chiave `anon public`.
 
-## Installare l'app sul telefono
+### 2. Vercel
 
-- **iPhone** (iOS 16.4 o successivo): apri il link in Safari › Condividi › *Aggiungi alla schermata Home*. Apri l'app dall'icona, menu campanella › *Attiva notifiche*. Su iPhone le notifiche funzionano solo dall'app installata.
-- **Android**: apri il link in Chrome › menu › *Installa app*, poi *Attiva notifiche*.
+1. Su [vercel.com](https://vercel.com) importa il repository `Incaric-App` (le impostazioni di build vengono riconosciute da sole).
+2. Aggiungi le variabili d'ambiente:
 
-## Sviluppo
+   | Variabile | Valore |
+   | --- | --- |
+   | `VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY` | dal punto 1.5 |
+   | `WEBHOOK_SECRET` | il valore mostrato al punto 1.2 |
+   | `VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY` | generate con `npx web-push generate-vapid-keys` |
+   | `SITO_URL` | l'indirizzo Vercel, es. `https://incaricapp.vercel.app` |
+   | `SMTP_HOST` / `SMTP_PORT` / `SMTP_USER` / `SMTP_PASS` / `SMTP_FROM` | facoltative: per ricevere anche le email |
+3. Pubblica. Poi, in Supabase:
+   - **Authentication › URL Configuration**: imposta come Site URL l'indirizzo Vercel.
+   - Se l'indirizzo non è `https://incaricapp.vercel.app`, nel **SQL Editor** esegui:
+     `update privato.configurazione set valore = 'https://<indirizzo>/api/notifica' where chiave = 'url_notifiche';`
 
-```bash
+### 3. Sui telefoni
+
+- **iPhone** (iOS 16.4 o successivo): apri l'indirizzo in Safari › Condividi › *Aggiungi alla schermata Home*. Apri l'app dall'icona, tocca la campanella › *Attiva notifiche*. Su iPhone le notifiche funzionano solo dall'app installata.
+- **Android:** apri in Chrome › menu › *Installa app*, poi campanella › *Attiva notifiche*.
+
+## Sviluppo locale
+
+```sh
+cp .env.example .env   # inserisci i valori di Supabase, oppure lascia vuoto per la versione di prova
 npm install
-npm run dev        # http://localhost:5173 (modalità demo se manca .env.local)
-npm run build      # controllo dei tipi e build in dist/
+npm run dev
 ```
 
-Struttura: `src/` app React, `public/sw.js` service worker (offline e notifiche), `functions/` invio notifiche, `firestore.rules` permessi.
+Senza le variabili Supabase l'app parte in **versione di prova**: i dati restano sul dispositivo e al login si sceglie chi essere.
 
-Per cambiare persone o mail: `src/config.ts`, `firestore.rules` e `functions/src/index.ts`.
+Struttura: `src/` app React, `public/sw.js` service worker (offline e notifiche), `api/notifica.ts` invio notifiche, `supabase/migrations/` database e permessi. Per cambiare persone o mail: `src/config.ts` e la tabella `utenti_autorizzati`.

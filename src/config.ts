@@ -12,7 +12,7 @@ export interface Person {
   color: string;
 }
 
-// The three people who use the app. Emails must match the Firebase Auth accounts
+// The three people who use the app. Emails must match utenti_autorizzati
 // and firestore.rules / functions/src/index.ts.
 export const PEOPLE: Person[] = [
   { id: "ap", email: "antonio.pancione@oliodante.it", name: "Antonio Pancione", first: "Antonio", short: "Pancione", area: "Direzione stabilimento", role: "director", initials: "AP", color: "#C8231B" },
