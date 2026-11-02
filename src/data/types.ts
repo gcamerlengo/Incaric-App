@@ -15,11 +15,14 @@ export interface Task {
 export type NewTask = Omit<Task, "id" | "done" | "doneAt" | "createdAt">;
 
 export interface Backend {
-  mode: "demo" | "firebase";
+  mode: "demo" | "live";
   /** Calls back with the signed-in person, or null. Returns an unsubscribe function. */
   onUser(cb: (p: Person | null) => void): () => void;
-  signIn(email: string, password: string): Promise<void>;
-  resetPassword(email: string): Promise<void>;
+  /** Sends a 6-digit sign-in code by email (works inside the installed iPhone app, unlike a link). */
+  sendCode(email: string): Promise<void>;
+  verifyCode(email: string, code: string): Promise<void>;
+  /** Demo only: sign in as one of the three people without a code. */
+  pickPerson?(email: string): Promise<void>;
   signOut(): Promise<void>;
   /** Live tasks for days in [from, to], filtered to what `me` may see. */
   watchTasks(me: Person, from: string, to: string, cb: (tasks: Task[]) => void): () => void;

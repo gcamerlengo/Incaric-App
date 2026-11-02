@@ -1,5 +1,5 @@
 import { demoBackend } from "./demo";
-import { createFirebaseBackend, firebaseConfigured } from "./firebase";
+import { createSupabaseBackend, supabaseConfigured } from "./supabase";
 import type { Backend } from "./types";
 
-export const backend: Backend = firebaseConfigured ? createFirebaseBackend() : demoBackend;
+export const backend: Backend = supabaseConfigured ? createSupabaseBackend() : demoBackend;

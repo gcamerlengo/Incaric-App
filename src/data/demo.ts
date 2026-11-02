@@ -2,7 +2,7 @@ import { PEOPLE, personByEmail, type Person } from "../config";
 import { addDays, toKey, weekStart } from "../dates";
 import type { Backend, NewTask, Task } from "./types";
 
-// Demo mode: everything lives in this browser's localStorage. Used when Firebase is not configured,
+// Demo mode: everything lives in this browser's localStorage. Used when Supabase is not configured,
 // so the app can be tried right away (GitHub Pages build) before the real backend exists.
 const K_TASKS = "incaricapp.demo.tasks";
 const K_USER = "incaricapp.demo.user";
@@ -47,11 +47,12 @@ if (typeof window !== "undefined") {
 export const demoBackend: Backend = {
   mode: "demo",
   onUser(cb) { userSubs.add(cb); cb(personByEmail(memUser) ?? null); return () => userSubs.delete(cb); },
-  async signIn(email) {
+  async pickPerson(email) {
     if (!personByEmail(email)) throw new Error("Questa mail non è abilitata all'app.");
     memUser = email; write(K_USER, email); emitUser();
   },
-  async resetPassword() { /* nothing to reset in demo */ },
+  async sendCode() { throw new Error("Nella versione di prova scegli una persona dall'elenco."); },
+  async verifyCode() { /* not used in demo */ },
   async signOut() { memUser = null; write(K_USER, null); emitUser(); },
   watchTasks(me, from, to, cb) {
     const run = () => cb(memTasks.filter((t) => t.day >= from && t.day <= to && (me.role === "director" || t.assigneeEmail === me.email)));
@@ -63,5 +64,5 @@ export const demoBackend: Backend = {
   },
   async updateTask(id, patch) { memTasks = memTasks.map((t) => (t.id === id ? { ...t, ...patch } : t)); save(); },
   async deleteTask(id) { memTasks = memTasks.filter((t) => t.id !== id); save(); },
-  async enablePush() { return "In modalità demo le notifiche push non sono attive. Lo saranno con il backend Firebase."; },
+  async enablePush() { return "Nella versione di prova le notifiche non sono attive. Lo saranno quando l'app sarà collegata a Supabase."; },
 };
