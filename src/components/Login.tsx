@@ -21,7 +21,7 @@ export function Login() {
     <main className="login">
       <div className="login-hero"><img className="login-logo" src="./brand/olio-dante.png" alt="Olio Dante" /></div>
       <h1>IncaricApp</h1>
-      <p className="login-sub">Compiti dello stabilimento</p>
+      <p className="login-sub">Attività dello stabilimento</p>
 
       {backend.mode === "demo" ? (
         <div className="login-card">

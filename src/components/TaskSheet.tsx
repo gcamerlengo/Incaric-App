@@ -50,11 +50,11 @@ export function TaskSheet({ open, me, task, defaultDay, defaultAssignee, days, o
   return (
     <>
       <div className={`scrim${open ? " open" : ""}`} onClick={onClose} />
-      <div className={`sheet${open ? " open" : ""}`} role="dialog" aria-modal="true" aria-hidden={!open} aria-label={task ? "Dettaglio compito" : "Nuovo compito"}>
+      <div className={`sheet${open ? " open" : ""}`} role="dialog" aria-modal="true" aria-hidden={!open} aria-label={task ? "Dettaglio attività" : "Nuova attività"}>
         <div className="grip" />
         {isDirector ? (
           <form onSubmit={submit} className="sheet-form">
-            <h2>{task ? "Modifica compito" : "Nuovo compito"}</h2>
+            <h2>{task ? "Modifica attività" : "Nuova attività"}</h2>
             <label>Cosa c'è da fare
               <input id="f-title" value={title} onChange={(e) => setTitle(e.target.value)} required placeholder="Es. Confermare ordine bottiglie da 1 L" />
             </label>
@@ -84,11 +84,11 @@ export function TaskSheet({ open, me, task, defaultDay, defaultAssignee, days, o
             <label>Nota (facoltativa)
               <textarea id="f-note" rows={2} value={note} onChange={(e) => setNote(e.target.value)} placeholder="Dettagli, riferimenti ordine, fornitore…" />
             </label>
-            <button className="primary" type="submit" disabled={busy}>{task ? "Salva modifiche" : "Assegna compito"}</button>
+            <button className="primary" type="submit" disabled={busy}>{task ? "Salva modifiche" : "Assegna attività"}</button>
             {task && (
               confirmDel
                 ? <button type="button" className="danger" onClick={async () => { await onDelete(task.id); onClose(); }}>Conferma eliminazione</button>
-                : <button type="button" className="link danger-link" onClick={() => setConfirmDel(true)}>Elimina compito</button>
+                : <button type="button" className="link danger-link" onClick={() => setConfirmDel(true)}>Elimina attività</button>
             )}
           </form>
         ) : task && (
@@ -96,9 +96,9 @@ export function TaskSheet({ open, me, task, defaultDay, defaultAssignee, days, o
             <div className="detail-head"><Flag p={task.priority} size={26} /><span>Priorità {PRIORITIES[task.priority].label.toLowerCase()} · {longLabel(task.day)}</span></div>
             <h2 className="detail-title">{task.title}</h2>
             {task.note ? <p className="detail-note">{task.note}</p> : <p className="detail-note muted">Nessuna nota.</p>}
-            <p className="muted small">Assegnato da {DIRECTOR?.name}</p>
+            <p className="muted small">Assegnata da {DIRECTOR?.name}</p>
             <button className="primary" type="button" onClick={() => { onToggle(task); onClose(); }}>
-              {task.done ? "Segna come da fare" : "Segna come fatto"}
+              {task.done ? "Segna come da fare" : "Segna come fatta"}
             </button>
           </div>
         )}

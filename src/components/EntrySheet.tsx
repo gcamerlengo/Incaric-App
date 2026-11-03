@@ -39,12 +39,12 @@ export function EntrySheet({ open, entry, defaultDay, onClose, onSave, onDelete 
   return (
     <>
       <div className={`scrim${open ? " open" : ""}`} onClick={onClose} />
-      <div className={`sheet${open ? " open" : ""}`} role="dialog" aria-modal="true" aria-hidden={!open} aria-label={entry ? "Modifica attività" : "Nuova attività"}>
+      <div className={`sheet${open ? " open" : ""}`} role="dialog" aria-modal="true" aria-hidden={!open} aria-label={entry ? "Modifica impegno" : "Nuovo impegno"}>
         <div className="grip" />
         <form onSubmit={submit} className="sheet-form">
-          <h2>{entry ? "Modifica attività" : "Nuova attività"}</h2>
+          <h2>{entry ? "Modifica impegno" : "Nuovo impegno"}</h2>
           <p className="muted small" style={{ margin: 0 }}>La tua agenda è personale: la vedi solo tu.</p>
-          <label>Attività
+          <label>Impegno
             <input id="a-title" value={title} onChange={(e) => setTitle(e.target.value)} required placeholder="Es. Riunione con il fornitore di vetro" />
           </label>
           <div className="two">
@@ -64,7 +64,7 @@ export function EntrySheet({ open, entry, defaultDay, onClose, onSave, onDelete 
           {entry && (
             confirmDel
               ? <button type="button" className="danger" onClick={async () => { await onDelete(entry.id); onClose(); }}>Conferma eliminazione</button>
-              : <button type="button" className="link danger-link" onClick={() => setConfirmDel(true)}>Elimina attività</button>
+              : <button type="button" className="link danger-link" onClick={() => setConfirmDel(true)}>Elimina impegno</button>
           )}
         </form>
       </div>

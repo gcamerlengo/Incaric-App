@@ -1,6 +1,6 @@
 # IncaricApp
 
-Web app installabile (PWA) con cui il Direttore dello stabilimento Olio Dante assegna i compiti del giorno a Programmazione Produzione e Acquisti, con bandierine di priorità e notifiche push. Stessa struttura di Agenda Autista.
+Web app installabile (PWA) con cui il Direttore dello stabilimento Olio Dante assegna le attività del giorno a Programmazione Produzione e Acquisti, con bandierine di priorità e notifiche push. Stessa struttura di Agenda Autista.
 
 - **Frontend:** React + Vite, installabile su Android e iPhone ("Aggiungi a schermata Home").
 - **Database e accesso:** Supabase (Postgres). Si entra con mail aziendale e password: al primo accesso ognuno sceglie la propria. Nessuna email viene inviata.
@@ -19,7 +19,7 @@ Tutti i servizi sono sui piani gratuiti.
 
 - Possono entrare solo le email in `utenti_autorizzati`; il ruolo viene da lì.
 - Priorità: **rossa** alta (entro oggi), **gialla** media (entro il giorno indicato), **verde** bassa (in settimana).
-- Agenda personale: ognuno annota le proprie attività (giorno, ora facoltativa, nota). È privata: la vede solo chi la scrive.
+- Agenda personale: ognuno annota i propri impegni (giorno, ora facoltativa, nota). È privata: la vede solo chi la scrive.
 - Notifiche: al collaboratore quando riceve un compito, al Direttore quando un compito viene completato.
 
 ## Messa in funzione

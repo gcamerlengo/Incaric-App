@@ -62,7 +62,7 @@ function Board({ me }: { me: Person }) {
       if (before) {
         for (const t of list) {
           const old = before.get(t.id);
-          if (!isDirector && !old) showToast(`Nuovo compito · ${PRIORITIES[t.priority].label}`, t.title);
+          if (!isDirector && !old) showToast(`Nuova attività · ${PRIORITIES[t.priority].label}`, t.title);
           if (isDirector && old && !old.done && t.done) showToast(`${personByEmail(t.assigneeEmail)?.short ?? ""} ha completato`, t.title);
         }
       }
@@ -124,7 +124,7 @@ function Board({ me }: { me: Person }) {
       {backend.mode === "demo" && <div className="demo-bar">Versione di prova · i dati restano su questo dispositivo</div>}
 
       <div className="tabs" role="tablist">
-        <button type="button" role="tab" aria-selected={view === "compiti"} onClick={() => setView("compiti")}>Compiti</button>
+        <button type="button" role="tab" aria-selected={view === "compiti"} onClick={() => setView("compiti")}>Attività</button>
         <button type="button" role="tab" aria-selected={view === "agenda"} onClick={() => setView("agenda")}>La mia agenda</button>
       </div>
 
@@ -133,8 +133,8 @@ function Board({ me }: { me: Person }) {
       <div className="dayhead">
         <h1>{longLabel(day)}</h1>
         <span>{view === "agenda"
-          ? (myDay.length ? `${myDone} di ${myDay.length} fatte` : "")
-          : (ofDay.length ? `${doneCount} di ${ofDay.length} fatti` : "")}</span>
+          ? (myDay.length ? `${myDone} di ${myDay.length} fatti` : "")
+          : (ofDay.length ? `${doneCount} di ${ofDay.length} fatte` : "")}</span>
       </div>
       {day !== todayKey() && <button type="button" className="today-link" onClick={() => setDay(todayKey())}>Torna a oggi</button>}
 
@@ -146,7 +146,7 @@ function Board({ me }: { me: Person }) {
           )) : (
             <div className="empty">
               <b>Agenda libera</b>
-              Tocca “Attività” per annotare un tuo impegno. La tua agenda la vedi solo tu.
+              Tocca “Impegno” per annotarne uno. La tua agenda la vedi solo tu.
             </div>
           )}
         </main>
@@ -165,8 +165,8 @@ function Board({ me }: { me: Person }) {
             onToggle={() => toggle(t)} onOpen={() => setSheet({ open: true, task: t })} />
         )) : (
           <div className="empty">
-            <b>{isDirector ? "Nessun compito" : "Giornata libera"}</b>
-            {isDirector ? "Tocca “Nuovo compito” per assegnarne uno." : "Nessun compito assegnato per questo giorno."}
+            <b>{isDirector ? "Nessuna attività" : "Giornata libera"}</b>
+            {isDirector ? "Tocca “Nuova attività” per assegnarne una." : "Nessuna attività assegnata per questo giorno."}
           </div>
         )}
       </main>
@@ -174,8 +174,8 @@ function Board({ me }: { me: Person }) {
       </>}
 
       {view === "agenda"
-        ? <button type="button" className="fab" onClick={() => setEntrySheet({ open: true, entry: null })}>+ Attività</button>
-        : isDirector && <button type="button" className="fab" onClick={() => setSheet({ open: true, task: null })}>+ Nuovo compito</button>}
+        ? <button type="button" className="fab" onClick={() => setEntrySheet({ open: true, entry: null })}>+ Impegno</button>
+        : isDirector && <button type="button" className="fab" onClick={() => setSheet({ open: true, task: null })}>+ Nuova attività</button>}
 
       <EntrySheet
         open={entrySheet.open} entry={entrySheet.entry} defaultDay={day}
