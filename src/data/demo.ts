@@ -1,11 +1,12 @@
 import { PEOPLE, personByEmail, type Person } from "../config";
 import { addDays, toKey, weekStart } from "../dates";
-import type { Backend, NewTask, Task } from "./types";
+import type { Backend, Entry, NewTask, Task } from "./types";
 
 // Demo mode: everything lives in this browser's localStorage. Used when Supabase is not configured,
 // so the app can be tried right away (GitHub Pages build) before the real backend exists.
 const K_TASKS = "incaricapp.demo.tasks";
 const K_USER = "incaricapp.demo.user";
+const K_AGENDA = "incaricapp.demo.agenda"; // { [email]: Entry[] }
 
 const read = <T,>(k: string, fallback: T): T => { try { const v = localStorage.getItem(k); return v ? (JSON.parse(v) as T) : fallback; } catch { return fallback; } };
 const write = (k: string, v: unknown) => { try { localStorage.setItem(k, JSON.stringify(v)); } catch { /* storage blocked: keep working in memory */ } };
@@ -31,7 +32,12 @@ function seed(): Task[] {
 
 let memTasks: Task[] = read<Task[] | null>(K_TASKS, null) ?? seed();
 let memUser: string | null = read<string | null>(K_USER, null);
+let memAgenda: Record<string, Entry[]> = read<Record<string, Entry[]>>(K_AGENDA, {});
 const taskSubs = new Set<() => void>();
+const agendaSubs = new Set<() => void>();
+const saveAgenda = () => { write(K_AGENDA, memAgenda); agendaSubs.forEach((f) => f()); };
+const mine = () => memAgenda[memUser ?? ""] ?? [];
+const setMine = (list: Entry[]) => { if (memUser) { memAgenda = { ...memAgenda, [memUser]: list }; saveAgenda(); } };
 const userSubs = new Set<(p: Person | null) => void>();
 
 const save = () => { write(K_TASKS, memTasks); taskSubs.forEach((f) => f()); };
@@ -41,6 +47,7 @@ const emitUser = () => { const p = personByEmail(memUser) ?? null; userSubs.forE
 if (typeof window !== "undefined") {
   window.addEventListener("storage", (e) => {
     if (e.key === K_TASKS) { memTasks = read<Task[]>(K_TASKS, memTasks); taskSubs.forEach((f) => f()); }
+    if (e.key === K_AGENDA) { memAgenda = read(K_AGENDA, memAgenda); agendaSubs.forEach((f) => f()); }
   });
 }
 
@@ -65,5 +72,13 @@ export const demoBackend: Backend = {
   },
   async updateTask(id, patch) { memTasks = memTasks.map((t) => (t.id === id ? { ...t, ...patch } : t)); save(); },
   async deleteTask(id) { memTasks = memTasks.filter((t) => t.id !== id); save(); },
+  watchAgenda(me, from, to, cb) {
+    const run = () => cb((memAgenda[me.email] ?? []).filter((e) => e.day >= from && e.day <= to));
+    agendaSubs.add(run); run();
+    return () => agendaSubs.delete(run);
+  },
+  async addEntry(e) { setMine([...mine(), { ...e, id: `agenda-${Date.now()}`, done: false, createdAt: Date.now() }]); },
+  async updateEntry(id, patch) { setMine(mine().map((e) => (e.id === id ? { ...e, ...patch } : e))); },
+  async deleteEntry(id) { setMine(mine().filter((e) => e.id !== id)); },
   async enablePush() { return "Nella versione di prova le notifiche non sono attive. Lo saranno quando l'app sarà collegata a Supabase."; },
 };

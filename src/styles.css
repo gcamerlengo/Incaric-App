@@ -60,6 +60,11 @@ textarea { resize: vertical; }
 .menu-msg { margin: 0; font-size: 13px; color: var(--giallo); }
 .demo-bar { background: var(--giallo); color: var(--nero); font-size: 12px; font-weight: 700; text-align: center; padding: 3px; }
 
+.tabs { display: grid; grid-template-columns: 1fr 1fr; gap: 4px; margin: 12px 12px 0; padding: 4px; background: var(--surface); border: 1px solid var(--line); border-radius: 14px; }
+.tabs button { border: 0; background: none; border-radius: 10px; padding: 9px 6px; font: 600 15px var(--f-display); text-transform: uppercase; letter-spacing: .04em; color: var(--muted); cursor: pointer; }
+.tabs button[aria-selected="true"] { background: var(--nero); color: var(--giallo); }
+@media (prefers-color-scheme: dark) { .tabs button[aria-selected="true"] { background: var(--giallo); color: var(--nero); } }
+
 .week { display: flex; align-items: center; gap: 4px; padding: 14px 8px 6px; }
 .week-arrow { flex: none; width: 28px; height: 52px; border: 0; background: none; font-size: 26px; color: var(--muted); cursor: pointer; }
 .days { flex: 1; display: grid; grid-template-columns: repeat(6, 1fr); gap: 5px; }
@@ -92,6 +97,9 @@ textarea { resize: vertical; }
 .check[aria-pressed="true"], .check.static.on { background: var(--oliva); border-color: var(--oliva); }
 .check.static { cursor: default; }
 .flag { flex: none; }
+.entry { border-left: 4px solid var(--oro); }
+.entry .when { flex: none; font: 600 15px var(--f-display); color: var(--oro); min-width: 44px; text-align: right; padding-top: 3px; }
+.two { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
 .empty { text-align: center; color: var(--muted); padding: 48px 16px; }
 .empty b { display: block; font: 600 17px var(--f-display); text-transform: uppercase; color: var(--fg); margin-bottom: 4px; }
 
