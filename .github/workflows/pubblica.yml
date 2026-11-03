@@ -23,6 +23,10 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npm run build
+      - name: Tieni i file della versione precedente
+        # Chi ha ancora la pagina vecchia aperta (o in cache) trova comunque i suoi file.
+        run: |
+          git fetch --depth=1 origin gh-pages && git archive FETCH_HEAD assets | tar -x -C dist --skip-old-files || true
       - name: Copia la build sul ramo gh-pages
         run: |
           cd dist

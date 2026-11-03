@@ -1,5 +1,5 @@
 // IncaricApp service worker: offline app shell + push notifications.
-const CACHE = "incaricapp-v3";
+const CACHE = "incaricapp-v4";
 
 self.addEventListener("install", (event) => {
   event.waitUntil(caches.open(CACHE).then((c) => c.addAll(["./", "./index.html", "./manifest.webmanifest", "./icons/icon-192.png"])));
@@ -19,7 +19,8 @@ self.addEventListener("fetch", (event) => {
   if (req.method !== "GET" || url.origin !== self.location.origin || url.pathname.startsWith("/api/")) return;
   if (req.mode === "navigate") {
     event.respondWith(
-      fetch(req).then((res) => {
+      // no-cache: always ask the server, so a new version never loads an old page pointing to deleted files.
+      fetch(req, { cache: "no-cache" }).then((res) => {
         const copy = res.clone();
         caches.open(CACHE).then((c) => c.put("./index.html", copy));
         return res;
@@ -35,7 +36,7 @@ self.addEventListener("fetch", (event) => {
   );
 });
 
-// Payload sent by api/notifica.ts: { title, body, day, tag }
+// Payload sent by the Supabase function "notifica": { title, body, day, tag }
 self.addEventListener("push", (event) => {
   let d = {};
   try { d = event.data ? event.data.json() : {}; } catch (e) { d = { body: event.data && event.data.text() }; }
