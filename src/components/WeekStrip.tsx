@@ -1,16 +1,17 @@
-import { PRIORITIES } from "../config";
 import { DOW_SHORT, toKey, todayKey } from "../dates";
-import type { Task } from "../data/types";
+
+/** Up to three coloured dots under a day (open tasks by priority, or agenda activities). */
+export type Dot = { id: string; color: string };
 
 interface Props {
   days: Date[];
   selected: string;
-  tasks: Task[];
+  dotsFor: (key: string) => Dot[];
   onPick: (key: string) => void;
   onShift: (weeks: number) => void;
 }
 
-export function WeekStrip({ days, selected, tasks, onPick, onShift }: Props) {
+export function WeekStrip({ days, selected, dotsFor, onPick, onShift }: Props) {
   const today = todayKey();
   return (
     <div className="week">
@@ -18,12 +19,12 @@ export function WeekStrip({ days, selected, tasks, onPick, onShift }: Props) {
       <div className="days">
         {days.map((d) => {
           const k = toKey(d);
-          const open = tasks.filter((t) => t.day === k && !t.done).sort((a, b) => PRIORITIES[a.priority].order - PRIORITIES[b.priority].order).slice(0, 3);
+          const dots = dotsFor(k).slice(0, 3);
           return (
             <button key={k} type="button" className={`day${k === today ? " today" : ""}`} aria-pressed={k === selected} onClick={() => onPick(k)}>
               <small>{DOW_SHORT[d.getDay()]}</small>
               <b>{d.getDate()}</b>
-              <span className="dots">{open.map((t) => <span key={t.id} style={{ background: `var(${PRIORITIES[t.priority].cssVar})` }} />)}</span>
+              <span className="dots">{dots.map((d) => <span key={d.id} style={{ background: d.color }} />)}</span>
             </button>
           );
         })}

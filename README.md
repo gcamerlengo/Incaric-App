@@ -19,6 +19,7 @@ Tutti i servizi sono sui piani gratuiti.
 
 - Possono entrare solo le email in `utenti_autorizzati`; il ruolo viene da lì.
 - Priorità: **rossa** alta (entro oggi), **gialla** media (entro il giorno indicato), **verde** bassa (in settimana).
+- Agenda personale: ognuno annota le proprie attività (giorno, ora facoltativa, nota). È privata: la vede solo chi la scrive.
 - Notifiche: al collaboratore quando riceve un compito, al Direttore quando un compito viene completato.
 
 ## Messa in funzione

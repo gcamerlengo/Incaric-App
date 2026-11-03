@@ -12,6 +12,19 @@ export interface Task {
   createdAt: number;
 }
 
+/** A private entry in someone's own agenda. */
+export interface Entry {
+  id: string;
+  title: string;
+  note?: string;
+  day: string; // YYYY-MM-DD
+  time: string | null; // HH:MM, or null for "any time"
+  done: boolean;
+  createdAt: number;
+}
+
+export type NewEntry = Pick<Entry, "title" | "note" | "day" | "time">;
+
 export type NewTask = Omit<Task, "id" | "done" | "doneAt" | "createdAt">;
 
 export interface Backend {
@@ -31,6 +44,11 @@ export interface Backend {
   addTask(t: NewTask): Promise<void>;
   updateTask(id: string, patch: Partial<Pick<Task, "title" | "note" | "assigneeEmail" | "day" | "priority" | "done" | "doneAt">>): Promise<void>;
   deleteTask(id: string): Promise<void>;
+  /** The signed-in person's own agenda for days in [from, to]. */
+  watchAgenda(me: Person, from: string, to: string, cb: (entries: Entry[]) => void): () => void;
+  addEntry(e: NewEntry): Promise<void>;
+  updateEntry(id: string, patch: Partial<Pick<Entry, "title" | "note" | "day" | "time" | "done">>): Promise<void>;
+  deleteEntry(id: string): Promise<void>;
   /** Asks permission and registers this device for push. Returns a user-facing status. */
   enablePush(me: Person): Promise<string>;
 }

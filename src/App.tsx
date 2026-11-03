@@ -1,14 +1,19 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { MEMBERS, PRIORITIES, personByEmail, type Person } from "./config";
 import { backend } from "./data";
-import type { NewTask, Task } from "./data/types";
+import type { Entry, NewEntry, NewTask, Task } from "./data/types";
 import { addDays, fromKey, isValidKey, longLabel, toKey, todayKey, weekDays, weekStart } from "./dates";
+import { EntryCard } from "./components/EntryCard";
+import { EntrySheet } from "./components/EntrySheet";
 import { Login } from "./components/Login";
 import { TaskCard } from "./components/TaskCard";
 import { TaskSheet } from "./components/TaskSheet";
 import { Toast, type ToastMsg } from "./components/Toast";
 import { WeekStrip } from "./components/WeekStrip";
 
+type View = "compiti" | "agenda";
+const K_VIEW = "incaricapp.view";
+const initialView = (): View => { try { return localStorage.getItem(K_VIEW) === "agenda" ? "agenda" : "compiti"; } catch { return "compiti"; } };
 const initialDay = () => { const h = location.hash.slice(1); return isValidKey(h) ? h : todayKey(); };
 
 export default function App() {
@@ -31,6 +36,10 @@ function Board({ me }: { me: Person }) {
   const [toast, setToast] = useState<ToastMsg | null>(null);
   const [menu, setMenu] = useState(false);
   const [pushMsg, setPushMsg] = useState<string | null>(null);
+  const [view, setView] = useState<View>(initialView);
+  const [entries, setEntries] = useState<Entry[]>([]);
+  const [entrySheet, setEntrySheet] = useState<{ open: boolean; entry: Entry | null }>({ open: false, entry: null });
+  useEffect(() => { try { localStorage.setItem(K_VIEW, view); } catch { /* not essential */ } }, [view]);
   const prev = useRef<Map<string, Task> | null>(null);
 
   const showToast = useCallback((head: string, body: string) => {
@@ -62,11 +71,27 @@ function Board({ me }: { me: Person }) {
     });
   }, [me, from, to, isDirector, showToast]);
 
+  useEffect(() => backend.watchAgenda(me, from, to, setEntries), [me, from, to]);
+
   const visible = tasks.filter((t) => filter === "all" || t.assigneeEmail === filter);
   const ofDay = visible
     .filter((t) => t.day === day)
     .sort((a, b) => Number(a.done) - Number(b.done) || PRIORITIES[a.priority].order - PRIORITIES[b.priority].order || a.createdAt - b.createdAt);
   const doneCount = ofDay.filter((t) => t.done).length;
+
+  const myDay = entries
+    .filter((e) => e.day === day)
+    .sort((a, b) => Number(a.done) - Number(b.done) || (a.time ?? "99").localeCompare(b.time ?? "99") || a.createdAt - b.createdAt);
+  const myDone = myDay.filter((e) => e.done).length;
+  const saveEntry = async (e: NewEntry, id?: string) => {
+    if (id) await backend.updateEntry(id, e); else await backend.addEntry(e);
+    if (e.day !== day) setDay(e.day);
+  };
+  const dotsFor = (k: string) => view === "agenda"
+    ? entries.filter((e) => e.day === k && !e.done).map((e) => ({ id: e.id, color: "var(--oro)" }))
+    : visible.filter((t) => t.day === k && !t.done)
+        .sort((a, b) => PRIORITIES[a.priority].order - PRIORITIES[b.priority].order)
+        .map((t) => ({ id: t.id, color: `var(${PRIORITIES[t.priority].cssVar})` }));
 
   const toggle = (t: Task) => { void backend.updateTask(t.id, { done: !t.done }); };
   const save = async (t: NewTask, id?: string) => {
@@ -98,14 +123,34 @@ function Board({ me }: { me: Person }) {
       </header>
       {backend.mode === "demo" && <div className="demo-bar">Versione di prova · i dati restano su questo dispositivo</div>}
 
-      <WeekStrip days={days} selected={day} tasks={visible} onPick={setDay} onShift={(w) => setDay(toKey(addDays(fromKey(day), w * 7)))} />
+      <div className="tabs" role="tablist">
+        <button type="button" role="tab" aria-selected={view === "compiti"} onClick={() => setView("compiti")}>Compiti</button>
+        <button type="button" role="tab" aria-selected={view === "agenda"} onClick={() => setView("agenda")}>La mia agenda</button>
+      </div>
+
+      <WeekStrip days={days} selected={day} dotsFor={dotsFor} onPick={setDay} onShift={(w) => setDay(toKey(addDays(fromKey(day), w * 7)))} />
 
       <div className="dayhead">
         <h1>{longLabel(day)}</h1>
-        <span>{ofDay.length ? `${doneCount} di ${ofDay.length} fatti` : ""}</span>
+        <span>{view === "agenda"
+          ? (myDay.length ? `${myDone} di ${myDay.length} fatte` : "")
+          : (ofDay.length ? `${doneCount} di ${ofDay.length} fatti` : "")}</span>
       </div>
       {day !== todayKey() && <button type="button" className="today-link" onClick={() => setDay(todayKey())}>Torna a oggi</button>}
 
+      {view === "agenda" ? (
+        <main className="list">
+          {myDay.length ? myDay.map((e) => (
+            <EntryCard key={e.id} e={e} onToggle={() => { void backend.updateEntry(e.id, { done: !e.done }); }}
+              onOpen={() => setEntrySheet({ open: true, entry: e })} />
+          )) : (
+            <div className="empty">
+              <b>Agenda libera</b>
+              Tocca “Attività” per annotare un tuo impegno. La tua agenda la vedi solo tu.
+            </div>
+          )}
+        </main>
+      ) : <>
       {isDirector && (
         <div className="chips">
           {[{ k: "all", l: "Tutti" }, ...MEMBERS.map((m) => ({ k: m.email, l: m.area.split(" ")[0] }))].map(({ k, l }) => (
@@ -126,7 +171,17 @@ function Board({ me }: { me: Person }) {
         )}
       </main>
 
-      {isDirector && <button type="button" className="fab" onClick={() => setSheet({ open: true, task: null })}>+ Nuovo compito</button>}
+      </>}
+
+      {view === "agenda"
+        ? <button type="button" className="fab" onClick={() => setEntrySheet({ open: true, entry: null })}>+ Attività</button>
+        : isDirector && <button type="button" className="fab" onClick={() => setSheet({ open: true, task: null })}>+ Nuovo compito</button>}
+
+      <EntrySheet
+        open={entrySheet.open} entry={entrySheet.entry} defaultDay={day}
+        onClose={() => setEntrySheet((s) => ({ ...s, open: false }))}
+        onSave={saveEntry} onDelete={(id) => backend.deleteEntry(id)}
+      />
 
       <TaskSheet
         open={sheet.open} me={me} task={sheet.task} defaultDay={day} days={days}

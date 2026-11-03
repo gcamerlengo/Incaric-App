@@ -1,6 +1,6 @@
 import { createClient, type RealtimeChannel } from "@supabase/supabase-js";
 import { personByEmail, type Priority } from "../config";
-import type { Backend, Task } from "./types";
+import type { Backend, Entry, Task } from "./types";
 
 const url = import.meta.env.VITE_SUPABASE_URL as string | undefined;
 const anonKey = import.meta.env.VITE_SUPABASE_ANON_KEY as string | undefined;
@@ -13,6 +13,11 @@ interface Row {
 const toTask = (r: Row): Task => ({
   id: r.id, title: r.titolo, note: r.nota, assigneeEmail: r.assegnato_a, day: r.giorno, priority: r.priorita,
   done: r.fatto, doneAt: r.fatto_il ? Date.parse(r.fatto_il) : null, createdAt: Date.parse(r.creato_il),
+});
+
+interface AgendaRow { id: string; titolo: string; nota: string; giorno: string; ora: string | null; fatto: boolean; creato_il: string }
+const toEntry = (r: AgendaRow): Entry => ({
+  id: r.id, title: r.titolo, note: r.nota, day: r.giorno, time: r.ora ? r.ora.slice(0, 5) : null, done: r.fatto, createdAt: Date.parse(r.creato_il),
 });
 
 const iOS = () => /iphone|ipad|ipod/i.test(navigator.userAgent);
@@ -90,6 +95,40 @@ export function createSupabaseBackend(): Backend {
     },
     async deleteTask(id) {
       const { error } = await sb.from("compiti").delete().eq("id", id);
+      if (error) throw new Error("Eliminazione non riuscita.");
+    },
+    watchAgenda(_me, from, to, cb) {
+      // Row Level Security returns only the signed-in person's own entries.
+      let alive = true;
+      const load = async () => {
+        const { data, error } = await sb.from("agenda").select("*").gte("giorno", from).lte("giorno", to);
+        if (error) { console.error("agenda", error); return; }
+        if (alive) cb((data as AgendaRow[]).map(toEntry));
+      };
+      void load();
+      const channel: RealtimeChannel = sb.channel(`agenda-${from}`)
+        .on("postgres_changes", { event: "*", schema: "public", table: "agenda" }, () => { void load(); })
+        .subscribe();
+      const onVisible = () => { if (document.visibilityState === "visible") void load(); };
+      document.addEventListener("visibilitychange", onVisible);
+      return () => { alive = false; void sb.removeChannel(channel); document.removeEventListener("visibilitychange", onVisible); };
+    },
+    async addEntry(e) {
+      const { error } = await sb.from("agenda").insert({ titolo: e.title, nota: e.note ?? "", giorno: e.day, ora: e.time });
+      if (error) throw new Error("Salvataggio non riuscito.");
+    },
+    async updateEntry(id, patch) {
+      const row: Record<string, unknown> = {};
+      if (patch.title !== undefined) row.titolo = patch.title;
+      if (patch.note !== undefined) row.nota = patch.note;
+      if (patch.day !== undefined) row.giorno = patch.day;
+      if (patch.time !== undefined) row.ora = patch.time;
+      if (patch.done !== undefined) row.fatto = patch.done;
+      const { error } = await sb.from("agenda").update(row).eq("id", id);
+      if (error) throw new Error("Salvataggio non riuscito.");
+    },
+    async deleteEntry(id) {
+      const { error } = await sb.from("agenda").delete().eq("id", id);
       if (error) throw new Error("Eliminazione non riuscita.");
     },
     async enablePush() {
