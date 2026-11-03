@@ -51,8 +51,9 @@ export const demoBackend: Backend = {
     if (!personByEmail(email)) throw new Error("Questa mail non è abilitata all'app.");
     memUser = email; write(K_USER, email); emitUser();
   },
-  async sendCode() { throw new Error("Nella versione di prova scegli una persona dall'elenco."); },
-  async verifyCode() { /* not used in demo */ },
+  async accessState(): Promise<"nuovo" | "attivo"> { throw new Error("Nella versione di prova scegli una persona dall'elenco."); },
+  async createPassword() { /* not used in demo */ },
+  async signIn() { /* not used in demo */ },
   async signOut() { memUser = null; write(K_USER, null); emitUser(); },
   watchTasks(me, from, to, cb) {
     const run = () => cb(memTasks.filter((t) => t.day >= from && t.day <= to && (me.role === "director" || t.assigneeEmail === me.email)));

@@ -18,9 +18,11 @@ export interface Backend {
   mode: "demo" | "live";
   /** Calls back with the signed-in person, or null. Returns an unsubscribe function. */
   onUser(cb: (p: Person | null) => void): () => void;
-  /** Sends a 6-digit sign-in code by email (works inside the installed iPhone app, unlike a link). */
-  sendCode(email: string): Promise<void>;
-  verifyCode(email: string, code: string): Promise<void>;
+  /** "nuovo": authorised, no password yet; "attivo": has a password. Throws if not authorised. */
+  accessState(email: string): Promise<"nuovo" | "attivo">;
+  /** First access: sets the person's own password, then signs in. No email is sent. */
+  createPassword(email: string, password: string): Promise<void>;
+  signIn(email: string, password: string): Promise<void>;
   /** Demo only: sign in as one of the three people without a code. */
   pickPerson?(email: string): Promise<void>;
   signOut(): Promise<void>;

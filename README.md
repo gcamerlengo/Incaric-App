@@ -3,7 +3,7 @@
 Web app installabile (PWA) con cui il Direttore dello stabilimento Olio Dante assegna i compiti del giorno a Programmazione Produzione e Acquisti, con bandierine di priorità e notifiche push. Stessa struttura di Agenda Autista.
 
 - **Frontend:** React + Vite, installabile su Android e iPhone ("Aggiungi a schermata Home").
-- **Database e accesso:** Supabase (Postgres). Si entra con un codice a 6 cifre ricevuto via email.
+- **Database e accesso:** Supabase (Postgres). Si entra con mail aziendale e password: al primo accesso ognuno sceglie la propria. Nessuna email viene inviata.
 - **Pubblicazione:** GitHub Pages, aggiornata da sola a ogni modifica su `main` (`.github/workflows/pubblica.yml`).
 - **Notifiche push:** Edge Function di Supabase `notifica` (`supabase/functions/notifica`), chiamata dal database.
 
@@ -27,12 +27,10 @@ Indirizzo dell'app: **https://gcamerlengo.github.io/Incaric-App/**
 
 ### 1. Supabase (progetto `IncaricApp`, già creato)
 
-Database, permessi, chiavi delle notifiche e funzione `notifica` sono già a posto (`supabase/migrations/0001`–`0003`). Restano da fare a mano, dal pannello di Supabase:
+Database, permessi, accesso con password (`0004`), chiavi delle notifiche e funzione `notifica` sono già a posto. Non serve configurare SMTP né modelli email.
 
-1. **Authentication › Emails › Templates**: nei modelli **Magic Link** e **Confirm signup** metti il codice, ad esempio
-   `Il tuo codice per IncaricApp è: {{ .Token }}`
-2. **Authentication › SMTP Settings** (consigliato): SMTP personalizzato con la casella Aruba di Agenda (`agenda@oliodante.it`), host `smtps.aruba.it`, porta `465`. Senza, Supabase invia pochissime email all'ora.
-3. **Authentication › URL Configuration**: Site URL `https://gcamerlengo.github.io/Incaric-App/`.
+Password dimenticata: nel **SQL Editor**
+`update auth.users set encrypted_password = extensions.crypt('<nuova>', extensions.gen_salt('bf')) where email = '<email>';`
 
 ### 2. GitHub Pages
 

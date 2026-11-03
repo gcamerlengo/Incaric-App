@@ -3,12 +3,12 @@ import { PEOPLE } from "../config";
 import { backend } from "../data";
 import { Avatar } from "./Avatar";
 
-// Sign-in with a 6-digit code sent by email: works inside the installed iPhone app,
-// where a link would open Safari instead of the app.
+// Sign-in with email and password, no emails sent. On first access each person picks a password.
 export function Login() {
   const [email, setEmail] = useState("");
-  const [code, setCode] = useState("");
-  const [sent, setSent] = useState(false);
+  const [pw, setPw] = useState("");
+  const [pw2, setPw2] = useState("");
+  const [state, setState] = useState<"nuovo" | "attivo" | null>(null);
   const [msg, setMsg] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
 
@@ -33,21 +33,38 @@ export function Login() {
             </button>
           ))}
         </div>
-      ) : !sent ? (
-        <form className="login-card" onSubmit={(e) => { e.preventDefault(); void run(async () => { await backend.sendCode(email); setSent(true); }); }}>
+      ) : !state ? (
+        <form className="login-card" onSubmit={(e) => { e.preventDefault(); void run(async () => setState(await backend.accessState(email))); }}>
           <label>Mail aziendale
-            <input id="email" type="email" autoComplete="email" required value={email} onChange={(e) => setEmail(e.target.value)} placeholder="nome.cognome@oliodante.it" />
+            <input id="email" type="email" autoComplete="username" required value={email} onChange={(e) => setEmail(e.target.value)} placeholder="nome.cognome@oliodante.it" />
           </label>
-          <button className="primary" type="submit" disabled={busy}>{busy ? "Invio…" : "Ricevi il codice"}</button>
+          <button className="primary" type="submit" disabled={busy}>{busy ? "Attendi…" : "Continua"}</button>
+        </form>
+      ) : state === "attivo" ? (
+        <form className="login-card" onSubmit={(e) => { e.preventDefault(); void run(() => backend.signIn(email, pw)); }}>
+          <p className="demo-note"><b>{email}</b></p>
+          <label>Password
+            <input id="password" type="password" autoComplete="current-password" required value={pw} onChange={(e) => setPw(e.target.value)} autoFocus />
+          </label>
+          <button className="primary" type="submit" disabled={busy}>{busy ? "Accesso…" : "Entra"}</button>
+          <button className="link" type="button" onClick={() => { setState(null); setPw(""); }}>Cambia mail</button>
         </form>
       ) : (
-        <form className="login-card" onSubmit={(e) => { e.preventDefault(); void run(() => backend.verifyCode(email, code)); }}>
-          <p className="demo-note">Abbiamo inviato un codice a <b>{email}</b>.</p>
-          <label>Codice
-            <input id="code" inputMode="numeric" autoComplete="one-time-code" required value={code} onChange={(e) => setCode(e.target.value)} placeholder="123456" />
+        <form className="login-card" onSubmit={(e) => {
+          e.preventDefault();
+          if (pw.length < 8) { setMsg("La password deve avere almeno 8 caratteri."); return; }
+          if (pw !== pw2) { setMsg("Le due password non coincidono."); return; }
+          void run(() => backend.createPassword(email, pw));
+        }}>
+          <p className="demo-note">Primo accesso per <b>{email}</b>: scegli la tua password (almeno 8 caratteri).</p>
+          <label>Nuova password
+            <input id="new-password" type="password" autoComplete="new-password" required value={pw} onChange={(e) => setPw(e.target.value)} autoFocus />
           </label>
-          <button className="primary" type="submit" disabled={busy}>{busy ? "Verifica…" : "Entra"}</button>
-          <button className="link" type="button" onClick={() => { setSent(false); setCode(""); }}>Cambia mail</button>
+          <label>Ripeti la password
+            <input id="new-password-2" type="password" autoComplete="new-password" required value={pw2} onChange={(e) => setPw2(e.target.value)} />
+          </label>
+          <button className="primary" type="submit" disabled={busy}>{busy ? "Creazione…" : "Crea password ed entra"}</button>
+          <button className="link" type="button" onClick={() => { setState(null); setPw(""); setPw2(""); }}>Cambia mail</button>
         </form>
       )}
       {msg && <p className="login-msg" role="alert">{msg}</p>}

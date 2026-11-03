@@ -34,15 +34,22 @@ export function createSupabaseBackend(): Backend {
       const { data } = sb.auth.onAuthStateChange((_e, session) => emit(session?.user.email));
       return () => data.subscription.unsubscribe();
     },
-    async sendCode(email) {
-      const e = email.trim().toLowerCase();
-      if (!personByEmail(e)) throw new Error("Questa mail non è abilitata all'app.");
-      const { error } = await sb.auth.signInWithOtp({ email: e });
-      if (error) throw new Error("Invio del codice non riuscito. Riprova tra un minuto.");
+    async accessState(email) {
+      const { data, error } = await sb.rpc("stato_accesso", { p_email: email.trim().toLowerCase() });
+      if (error) throw new Error("Connessione non riuscita. Riprova.");
+      if (data === "no") throw new Error("Questa mail non è abilitata all'app.");
+      return data as "nuovo" | "attivo";
     },
-    async verifyCode(email, code) {
-      const { error } = await sb.auth.verifyOtp({ email: email.trim().toLowerCase(), token: code.trim(), type: "email" });
-      if (error) throw new Error("Codice non valido o scaduto.");
+    async createPassword(email, password) {
+      const e = email.trim().toLowerCase();
+      const { error } = await sb.rpc("crea_accesso", { p_email: e, p_password: password });
+      if (error) throw new Error(error.message);
+      const { error: err2 } = await sb.auth.signInWithPassword({ email: e, password });
+      if (err2) throw new Error("Password creata, ma l'accesso non è riuscito. Riprova.");
+    },
+    async signIn(email, password) {
+      const { error } = await sb.auth.signInWithPassword({ email: email.trim().toLowerCase(), password });
+      if (error) throw new Error("Password non corretta.");
     },
     async signOut() { await sb.auth.signOut(); },
     watchTasks(me, from, to, cb) {
