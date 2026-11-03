@@ -30,7 +30,7 @@ function giorno(g: string): string {
 function messaggio(e: Evento) {
   const c = e.compito;
   if (e.tipo === "fatto") return { title: `${e.collaboratore ?? "Un collaboratore"} ha completato`, body: c.titolo };
-  return { title: `Nuovo compito · ${PRIORITA[c.priorita] ?? ""}`, body: `${c.titolo} · ${giorno(c.giorno)}` };
+  return { title: `Nuova attività · ${PRIORITA[c.priorita] ?? ""}`, body: `${c.titolo} · ${giorno(c.giorno)}` };
 }
 
 Deno.serve(async (req) => {

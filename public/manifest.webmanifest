@@ -1,7 +1,7 @@
 {
   "name": "IncaricApp · Olio Dante",
   "short_name": "IncaricApp",
-  "description": "Compiti del giorno dalla Direzione di stabilimento.",
+  "description": "Attività del giorno dalla Direzione di stabilimento.",
   "lang": "it",
   "start_url": "./",
   "scope": "./",

@@ -20,17 +20,17 @@ export function TaskCard({ t, showWho, canCheck, onToggle, onOpen }: Props) {
   return (
     <div className={`task${t.done ? " done" : ""}`}>
       {canCheck ? (
-        <button type="button" className="check" aria-pressed={t.done} aria-label={t.done ? "Segna come da fare" : "Segna come fatto"} onClick={onToggle}>
+        <button type="button" className="check" aria-pressed={t.done} aria-label={t.done ? "Segna come da fare" : "Segna come fatta"} onClick={onToggle}>
           {t.done && <Tick />}
         </button>
       ) : (
-        <span className={`check static${t.done ? " on" : ""}`} aria-label={t.done ? "Fatto" : "Da fare"}>{t.done && <Tick />}</span>
+        <span className={`check static${t.done ? " on" : ""}`} aria-label={t.done ? "Fatta" : "Da fare"}>{t.done && <Tick />}</span>
       )}
       <button type="button" className="task-body" onClick={onOpen}>
         <span className="t">{t.title}</span>
         <span className="meta">
           {showWho && who && <span className="who"><Avatar p={who} size={18} />{who.short}</span>}
-          <span>{t.done ? "Fatto" : `Priorità ${PRIORITIES[t.priority].label.toLowerCase()}`}</span>
+          <span>{t.done ? "Fatta" : `Priorità ${PRIORITIES[t.priority].label.toLowerCase()}`}</span>
           {t.note && <span>· nota</span>}
         </span>
       </button>
