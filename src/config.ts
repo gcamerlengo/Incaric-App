@@ -12,11 +12,10 @@ export interface Person {
   color: string;
 }
 
-// The three people who use the app. Emails must match utenti_autorizzati
+// The people who use the app. Emails must match utenti_autorizzati
 // and firestore.rules / functions/src/index.ts.
 export const PEOPLE: Person[] = [
   { id: "ap", email: "antonio.pancione@oliodante.it", name: "Antonio Pancione", first: "Antonio", short: "Pancione", area: "Direzione stabilimento", role: "director", initials: "AP", color: "#C8231B" },
-  { id: "dg", email: "antonio.delgiacco@oliodante.it", name: "Antonio Del Giacco", first: "Antonio", short: "Del Giacco", area: "Programmazione Produzione", role: "member", initials: "AD", color: "#5E6B2A" },
   { id: "rg", email: "raffaele.gentile@oliodante.it", name: "Raffaele Gentile", first: "Raffaele", short: "Gentile", area: "Acquisti", role: "member", initials: "RG", color: "#A8925A" },
 ];
 

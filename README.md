@@ -11,7 +11,7 @@ Tutti i servizi sono sui piani gratuiti.
 
 ## Regole, garantite dal database
 
-| | Antonio Pancione (Direttore) | Antonio Del Giacco, Raffaele Gentile |
+| | Antonio Pancione (Direttore) | Raffaele Gentile |
 |---|---|---|
 | Vedere i compiti | tutti | solo i propri |
 | Creare, modificare, eliminare | sì | no |
