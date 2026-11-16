@@ -1,4 +1,4 @@
-import { PEOPLE, personByEmail, type Person } from "../config";
+import { MEMBERS, personByEmail, type Person } from "../config";
 import { addDays, toKey, weekStart } from "../dates";
 import type { Backend, Entry, NewTask, Task } from "./types";
 
@@ -14,16 +14,12 @@ const write = (k: string, v: unknown) => { try { localStorage.setItem(k, JSON.st
 function seed(): Task[] {
   const mon = weekStart(new Date());
   const d = (i: number) => toKey(addDays(mon, i));
-  const dg = PEOPLE[1].email, rg = PEOPLE[2].email, now = Date.now();
+  const rg = MEMBERS[0].email, now = Date.now();
   const rows: Array<[string, string, number, Task["priority"], boolean]> = [
-    ["Rivedere il piano di imbottigliamento della linea 3", dg, 0, "alta", false],
-    ["Verificare con il magazzino le scorte di vetro da 750 ml", dg, 0, "media", true],
     ["Richiedere tre preventivi per i tappi a vite", rg, 0, "alta", false],
     ["Sollecitare la consegna dei cartoni al fornitore", rg, 0, "media", false],
-    ["Pianificare il fermo linea per la manutenzione", dg, 1, "media", false],
     ["Chiudere l'ordine di latte da 5 L per l'export", rg, 1, "alta", false],
     ["Aggiornare il listino fornitori olio extravergine", rg, 2, "bassa", false],
-    ["Inviare il programma settimanale ai capiturno", dg, 4, "bassa", false],
   ];
   return rows.map(([title, assigneeEmail, i, priority, done], n) => ({
     id: `demo-${n + 1}`, title, assigneeEmail, day: d(i), priority, done, doneAt: done ? now : null, createdAt: now - n,
